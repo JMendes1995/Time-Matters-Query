@@ -1,2 +1,2 @@
-from Time_Matters_Query.query import Query
+from Time_Matters_Query.arquivo import ArquivoPT
 from Time_Matters_Query.TextProcessing.normalization import normalization

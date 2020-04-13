@@ -8,13 +8,12 @@ import requests
 import multiprocessing
 from itertools import chain
 
-class Query():
-    def __init__(self, max_items=50, offset=0, newspaper3k=False):
+class ArquivoPT():
+    def __init__(self, max_items=50, newspaper3k=False):
         self.max_items = max_items
-        self.offset = offset
         self.newspaper3k=newspaper3k
 
-    def arquivo_pt(self, query,  domains=[], beginDate='', endDate='', title=False,snippet=True,fullContent=False, link=''):
+    def getResult(self, query,  domains=[], beginDate='', endDate='', title=False,snippet=True,fullContent=False, link=''):
         import time
         start_time = time.time()
         if not (domains):
@@ -33,7 +32,7 @@ class Query():
         except:
             pass
 
-        with Pool(processes=multiprocessing.cpu_count()*4) as pool:
+        with Pool(processes=multiprocessing.cpu_count()) as pool:
             result = pool.starmap(format_output,
                                              zip(results_flat_list, repeat(self.newspaper3k), repeat(title), repeat(snippet), repeat(fullContent)))
         domains_list = [item[1] for item in result]
@@ -57,13 +56,12 @@ class Query():
                 arquivo_pt = 'http://arquivo.pt/textsearch'
                 payload = {'q': query,
                        'maxItems': self.max_items,
-                       'offset': self.offset,
                        'siteSearch': domain,
                        'from': beginDate,
                        'to': endDate,
                        'itemsPerSite': self.max_items,
                        'fields': 'title,originalURL,linkToExtractedText,linkToNoFrame,linkToArchive,tstamp,date,siteSearch,snippet'}
-                r = requests.get(arquivo_pt, params=payload, timeout=300)
+                r = requests.get(arquivo_pt, params=payload, timeout=45)
                 try:
                     contentsJSon = r.json( )
                 except:
@@ -89,11 +87,6 @@ def format_output(item, newspaper3k, title, snippet, fullContent):
     domain = [ d for d in fetched_domain[0] if d != ""]
     result_tmp={}
     from Time_Matters_Query import normalization
-    snippet_content = normalization(item['snippet'], html_strip=True, accented_char_removal=False,
-                            contraction_expansion=False,
-                            text_lower_case=False, special_char_removal=False, remove_digits=False)
-    title_content = item['title'].replace('\xa0', '').replace('\x95', '')
-
 
     if newspaper3k == True and fullContent == True:
         try:
@@ -103,7 +96,6 @@ def format_output(item, newspaper3k, title, snippet, fullContent):
         except:
             result_tmp['fullContentLenght_Newspaper3K'] = ""
             result_tmp['Summary_Newspaper3k'] = ""
-
 
     elif newspaper3k == False and fullContent==True:
         try:
@@ -116,8 +108,12 @@ def format_output(item, newspaper3k, title, snippet, fullContent):
             result_tmp['fullContentLenght_Arquivo'] = ''
     try:
         if title:
-            result_tmp['title'] = title_content
+            result_tmp['title'] = item['title'].replace('\xa0', '').replace('\x95', '')
         if snippet:
+            snippet_content = normalization(item['snippet'], html_strip=True, accented_char_removal=False,
+                                            contraction_expansion=False,
+                                            text_lower_case=False, special_char_removal=False, remove_digits=False)
+
             result_tmp['snippet'] = snippet_content
         res= {'crawledDate': item['tstamp'],
               'url': item["linkToArchive"],

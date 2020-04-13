@@ -32,7 +32,7 @@ class URL:
 
         import multiprocessing
 
-        with Pool(processes=1) as pool:
+        with Pool(processes=multiprocessing.cpu_count()) as pool:
             x = pool.starmap(format_output,
             zip(contentsJSon["response_items"], repeat(self.newspaper3k), repeat(title), repeat(fullContent)))
 
