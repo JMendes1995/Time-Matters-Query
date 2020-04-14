@@ -1,2 +1,3 @@
-from Time_Matters_Query.arquivo import ArquivoPT
+from Time_Matters_Query.arquivoPT import ArquivoPT
 from Time_Matters_Query.TextProcessing.normalization import normalization
+from Time_Matters_Query.arquivoPT_url import ArquivoPT_url

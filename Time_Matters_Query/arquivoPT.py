@@ -82,9 +82,10 @@ def newspaper3k_get_text(url):
 
 
 def format_output(item, newspaper3k, title, snippet, fullContent):
-    import re
-    fetched_domain = re.findall('https://(.+?)/|http://(.+?)/',item['originalURL'])
-    domain = [ d for d in fetched_domain[0] if d != ""]
+
+    from urllib.parse import urlparse
+    domain = urlparse(item['originalURL'])
+
     result_tmp={}
     from Time_Matters_Query import normalization
 
@@ -117,12 +118,12 @@ def format_output(item, newspaper3k, title, snippet, fullContent):
             result_tmp['snippet'] = snippet_content
         res= {'crawledDate': item['tstamp'],
               'url': item["linkToArchive"],
-              'domain': domain[0]}
+              'domain': domain.netloc}
         result_tmp.update(res)
     except:
-        return [{}, domain[0]]
+        return [{},domain.netloc]
 
-    return [result_tmp, domain[0]]
+    return [result_tmp, domain.netloc]
 
 
 def search_statistics(total_time, max_items, n_domains, domains):

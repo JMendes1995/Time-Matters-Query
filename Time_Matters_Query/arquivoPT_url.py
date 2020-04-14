@@ -5,24 +5,20 @@ import random
 from multiprocessing import Pool
 from itertools import repeat
 import requests
-import multiprocessing
-from itertools import chain
-from Time_Matters_Query.query import newspaper3k_get_text, search_statistics
+from Time_Matters_Query.arquivoPT import newspaper3k_get_text, search_statistics
 
-class URL:
-    def __init__(self, max_items=50, offset=0, newspaper3k=False):
+class ArquivoPT_url:
+    def __init__(self, max_items=50, newspaper3k=False):
         self.max_items = max_items
-        self.offset = offset
         self.newspaper3k=newspaper3k
 
-    def arquivo_pt(self, url='', beginDate='', endDate='', title=True,  fullContent=False):
+    def getResult(self, url='', beginDate='', endDate='', title=True,  fullContent=False):
         domain_list = []
         import time
         start_time = time.time()
         arquivo_pt = 'http://arquivo.pt/textsearch'
         payload = {'versionHistory': url,
                        'maxItems': self.max_items,
-                       'offset': self.offset,
                        'from': beginDate,
                        'to': endDate,
                        'fields': 'title,originalURL,linkToExtractedText,linkToNoFrame,linkToArchive,tstamp,date,siteSearch,snippet'}
@@ -49,11 +45,10 @@ class URL:
         return final_output
 
 
-
 def format_output(item, newspaper3k, title, fullContent):
-    import re
-    fetched_domain = re.findall('https://(.+?)/|http://(.+?)/',item['originalURL'])
-    domain = [ d for d in fetched_domain[0] if d != ""]
+    from urllib.parse import urlparse
+    domain = urlparse(item['originalURL'])
+
     result_tmp={}
 
     if newspaper3k == True and fullContent == True:
@@ -79,8 +74,8 @@ def format_output(item, newspaper3k, title, fullContent):
             result_tmp['title'] = item['title'].replace('\xa0', '').replace('\x95', '')
         res= {'crawledDate': item['tstamp'],
               'url': item["linkToArchive"],
-              'domain': domain[0]}
+              'domain': domain.netloc}
         result_tmp.update(res)
     except:
-        return [{}, domain[0]]
-    return [result_tmp, domain[0]]
+        return [{}, domain.netloc]
+    return [result_tmp, domain.netloc]
