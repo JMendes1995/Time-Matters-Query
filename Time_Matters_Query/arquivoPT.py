@@ -13,7 +13,7 @@ class ArquivoPT():
         self.max_items = max_items
         self.newspaper3k=newspaper3k
 
-    def getResult(self, query,  domains=[], beginDate='', endDate='', title=False,snippet=True,fullContent=False, link=''):
+    def getResult(self, query,  domains=[], beginDate='', endDate='', title=False,snippet=True,fullContent=False):
         import time
         start_time = time.time()
         if not (domains):
@@ -23,7 +23,7 @@ class ArquivoPT():
 
         with Pool(processes=multiprocessing.cpu_count()) as pool:
             results_by_domain = pool.starmap(self.getResultsByDomain,
-                                             zip(domains, repeat(query),  repeat(beginDate), repeat(endDate), repeat(link)))
+                                             zip(domains, repeat(query),  repeat(beginDate), repeat(endDate)))
 
         results_flat_list = list(chain.from_iterable(results_by_domain))
 
@@ -51,25 +51,22 @@ class ArquivoPT():
 
         return final_output
 
-    def getResultsByDomain(self, domain, query, beginDate, endDate, link):
-        if link == '':
-                arquivo_pt = 'http://arquivo.pt/textsearch'
-                payload = {'q': query,
-                       'maxItems': self.max_items,
-                       'siteSearch': domain,
-                       'from': beginDate,
-                       'to': endDate,
-                       'itemsPerSite': self.max_items,
-                       'fields': 'title,originalURL,linkToExtractedText,linkToNoFrame,linkToArchive,tstamp,date,siteSearch,snippet'}
-                r = requests.get(arquivo_pt, params=payload, timeout=45)
-                try:
-                    contentsJSon = r.json( )
-                except:
-                    return {}
+    def getResultsByDomain(self, domain, query, beginDate, endDate):
 
-        else:
-            r = requests.get(link)
+        arquivo_pt = 'http://arquivo.pt/textsearch'
+        payload = {'q': query,
+                   'maxItems': self.max_items,
+                   'siteSearch': domain,
+                   'from': beginDate,
+                   'to': endDate,
+                   'itemsPerSite': self.max_items,
+                   'fields': 'title,originalURL,linkToExtractedText,linkToNoFrame,linkToArchive,tstamp,date,siteSearch,snippet'}
+        r = requests.get(arquivo_pt, params=payload, timeout=45)
+        try:
             contentsJSon = r.json( )
+        except:
+            return {}
+
         return contentsJSon['response_items']
 
 
